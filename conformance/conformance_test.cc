@@ -33,7 +33,6 @@
 #include <stdarg.h>
 
 #include <fstream>
-#include <set>
 #include <string>
 
 #include "google/protobuf/message.h"
@@ -44,6 +43,7 @@
 #include "google/protobuf/stubs/logging.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
+#include "absl/strings/string_view.h"
 #include "conformance/conformance.pb.h"
 #include "conformance/conformance.pb.h"
 
@@ -70,6 +70,45 @@ static string ToOctString(const string& binary_string) {
     oct_string.push_back('0' + low);
   }
   return oct_string;
+}
+
+template <typename SetT>
+bool CheckSetEmpty(const SetT& set_to_check, absl::string_view write_to_file,
+                   absl::string_view msg, absl::string_view output_dir,
+                   std::string* output) {
+  if (set_to_check.empty()) {
+    return true;
+  } else {
+    absl::StrAppendFormat(output, "\n");
+    absl::StrAppendFormat(output, "%s\n\n", msg);
+    for (absl::string_view v : set_to_check) {
+      absl::StrAppendFormat(output, "  %s\n", v);
+    }
+    absl::StrAppendFormat(output, "\n");
+
+    if (!write_to_file.empty()) {
+      std::string full_filename;
+      absl::string_view filename = write_to_file;
+      if (!output_dir.empty()) {
+        full_filename = std::string(output_dir);
+        if (*output_dir.rbegin() != '/') {
+          full_filename.push_back('/');
+        }
+        absl::StrAppend(&full_filename, write_to_file);
+        filename = full_filename;
+      }
+      std::ofstream os{std::string(filename)};
+      if (os) {
+        for (absl::string_view v : set_to_check) {
+          os << v << "\n";
+        }
+      } else {
+        absl::StrAppendFormat(output, "Failed to open file: %s\n", filename);
+      }
+    }
+
+    return false;
+  }
 }
 
 }  // namespace
@@ -390,45 +429,6 @@ void ConformanceTestSuite::RunTest(const string& test_name,
   }
 }
 
-bool ConformanceTestSuite::CheckSetEmpty(
-    const std::set<string>& set_to_check,
-    const std::string& write_to_file,
-    const std::string& msg) {
-  if (set_to_check.empty()) {
-    return true;
-  } else {
-    absl::StrAppendFormat(&output_, "\n");
-    absl::StrAppendFormat(&output_, "%s\n\n", msg);
-    for (absl::string_view v : set_to_check) {
-      absl::StrAppendFormat(&output_, "  %s\n", v);
-    }
-    absl::StrAppendFormat(&output_, "\n");
-
-    if (!write_to_file.empty()) {
-      std::string full_filename;
-      const std::string* filename = &write_to_file;
-      if (!output_dir_.empty()) {
-        full_filename = output_dir_;
-        if (*output_dir_.rbegin() != '/') {
-          full_filename.push_back('/');
-        }
-        full_filename += write_to_file;
-        filename = &full_filename;
-      }
-      std::ofstream os(*filename);
-      if (os) {
-        for (absl::string_view v : set_to_check) {
-          os << v << "\n";
-        }
-      } else {
-        absl::StrAppendFormat(&output_, "Failed to open file: %s\n", *filename);
-      }
-    }
-
-    return false;
-  }
-}
-
 string ConformanceTestSuite::WireFormatToString(
     WireFormat wire_format) {
   switch (wire_format) {
@@ -473,36 +473,45 @@ bool ConformanceTestSuite::RunSuite(ConformanceTestRunner* runner,
   RunSuiteImpl();
 
   bool ok = true;
-  if (!CheckSetEmpty(expected_to_fail_, "nonexistent_tests.txt",
-                     "These tests were listed in the failure list, but they "
-                     "don't exist.  Remove them from the failure list by "
-                     "running:\n"
-                     "  ./update_failure_list.py " + failure_list_filename_ +
-                     " --remove nonexistent_tests.txt")) {
+  if (!CheckSetEmpty(
+          expected_to_fail_, "nonexistent_tests.txt",
+          absl::StrCat("These tests were listed in the failure list, but they "
+                       "don't exist.  Remove them from the failure list by "
+                       "running:\n"
+                       "  ./update_failure_list.py ",
+                       failure_list_filename_,
+                       " --remove nonexistent_tests.txt"),
+          output_dir_, &output_)) {
     ok = false;
   }
-  if (!CheckSetEmpty(unexpected_failing_tests_, "failing_tests.txt",
-                     "These tests failed.  If they can't be fixed right now, "
-                     "you can add them to the failure list so the overall "
-                     "suite can succeed.  Add them to the failure list by "
-                     "running:\n"
-                     "  ./update_failure_list.py " + failure_list_filename_ +
-                     " --add failing_tests.txt")) {
+  if (!CheckSetEmpty(
+          unexpected_failing_tests_, "failing_tests.txt",
+          absl::StrCat("These tests failed.  If they can't be fixed right now, "
+                       "you can add them to the failure list so the overall "
+                       "suite can succeed.  Add them to the failure list by "
+                       "running:\n"
+                       "  ./update_failure_list.py ",
+                       failure_list_filename_, " --add failing_tests.txt"),
+          output_dir_, &output_)) {
     ok = false;
   }
-  if (!CheckSetEmpty(unexpected_succeeding_tests_, "succeeding_tests.txt",
-                     "These tests succeeded, even though they were listed in "
-                     "the failure list.  Remove them from the failure list "
-                     "by running:\n"
-                     "  ./update_failure_list.py " + failure_list_filename_ +
-                     " --remove succeeding_tests.txt")) {
+  if (!CheckSetEmpty(
+          unexpected_succeeding_tests_, "succeeding_tests.txt",
+          absl::StrCat("These tests succeeded, even though they were listed in "
+                       "the failure list.  Remove them from the failure list "
+                       "by running:\n"
+                       "  ./update_failure_list.py ",
+                       failure_list_filename_,
+                       " --remove succeeding_tests.txt"),
+          output_dir_, &output_)) {
     ok = false;
   }
 
   if (verbose_) {
     CheckSetEmpty(skipped_, "",
                   "These tests were skipped (probably because support for some "
-                  "features is not implemented)");
+                  "features is not implemented)",
+                  output_dir_, &output_);
   }
 
   absl::StrAppendFormat(&output_,

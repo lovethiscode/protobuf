@@ -37,10 +37,8 @@
 #endif  // _WIN32
 
 #include <algorithm>
-#include <map>
 #include <memory>
 #include <random>
-#include <set>
 #include <sstream>
 #include <vector>
 
@@ -50,6 +48,7 @@
 #include "google/protobuf/testing/googletest.h"
 #include <gtest/gtest.h>
 #include "absl/base/casts.h"
+#include "absl/container/btree_set.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/container/flat_hash_set.h"
 #include "google/protobuf/stubs/logging.h"
@@ -112,10 +111,10 @@ class MapImplTest : public ::testing::Test {
     ExpectElement(key, value);
   }
 
-  void ExpectElements(const std::map<int32_t, int32_t>& map) {
+  void ExpectElements(const absl::flat_hash_map<int32_t, int32_t>& map) {
     EXPECT_FALSE(map_.empty());
     EXPECT_EQ(map.size(), map_.size());
-    for (std::map<int32_t, int32_t>::const_iterator it = map.begin();
+    for (absl::flat_hash_map<int32_t, int32_t>::const_iterator it = map.begin();
          it != map.end(); ++it) {
       ExpectElement(it->first, it->second);
     }
@@ -438,7 +437,7 @@ TEST_F(MapImplTest, BeginIsFast) {
 // was triggered.  This test is a hacky, but probably better than nothing.
 TEST_F(MapImplTest, HashFlood) {
   const int kTestSize = 1024;  // must be a power of 2
-  std::set<int> s;
+  absl::btree_set<int> s;
   for (int i = 0; s.size() < kTestSize; i++) {
     if ((map_.hash_function()(i) & (kTestSize - 1)) < 3) {
       s.insert(i);
@@ -449,7 +448,7 @@ TEST_F(MapImplTest, HashFlood) {
   // of 2 for table sizes, and that it's sufficient to "flood" with respect to
   // the low bits of the output of map_.hash_function().
   std::vector<int64_t> times;
-  std::set<int>::iterator it = s.begin();
+  absl::btree_set<int>::iterator it = s.begin();
   int count = 0;
   do {
     const int64_t start = Now();
@@ -613,7 +612,7 @@ TEST_F(MapImplTest, IteratorInvalidation) {
 #else
   const int kMaxSizeToTest = 1000 * 1000;
 #endif
-  std::set<int> s;
+  absl::btree_set<int> s;
   int n = kMaxSizeToTest;
   unsigned int frog = k1 + n;
   while (n > 1 && s.size() < 25) {
@@ -627,7 +626,7 @@ TEST_F(MapImplTest, IteratorInvalidation) {
   s.insert(2);
   s.insert(3);
   // Now, the real work.
-  for (std::set<int>::iterator i = s.begin(); i != s.end(); ++i) {
+  for (auto i = s.begin(); i != s.end(); ++i) {
     StressTestIterators(*i);
   }
 }
@@ -994,14 +993,14 @@ TEST_F(MapImplTest, InsertByIterator) {
   int32_t value2a = 200;
   int32_t value2b = 201;
 
-  std::map<int32_t, int32_t> map1;
+  absl::flat_hash_map<int32_t, int32_t> map1;
   map1[key1] = value1a;
   map1[key2] = value2a;
 
   map_.insert(map1.begin(), map1.end());
   ExpectElements(map1);
 
-  std::map<int32_t, int32_t> map2;
+  absl::flat_hash_map<int32_t, int32_t> map2;
   map2[key1] = value1b;
   map2[key2] = value2b;
 
@@ -1103,7 +1102,7 @@ TEST_F(MapImplTest, EraseByIterator) {
   int32_t value1 = 100;
   int32_t value2 = 101;
 
-  std::map<int32_t, int32_t> map;
+  absl::flat_hash_map<int32_t, int32_t> map;
   map[key1] = value1;
   map[key2] = value2;
 
@@ -1139,7 +1138,7 @@ static void CopyConstructorHelper(Arena* arena, Map<int32_t, int32_t>* m) {
   int32_t value1 = 100;
   int32_t value2 = 101;
 
-  std::map<int32_t, int32_t> map;
+  absl::flat_hash_map<int32_t, int32_t> map;
   map[key1] = value1;
   map[key2] = value2;
 
@@ -1167,7 +1166,7 @@ TEST_F(MapImplTest, IterConstructor) {
   int32_t value1 = 100;
   int32_t value2 = 101;
 
-  std::map<int32_t, int32_t> map;
+  absl::flat_hash_map<int32_t, int32_t> map;
   map[key1] = value1;
   map[key2] = value2;
 
@@ -1184,7 +1183,7 @@ TEST_F(MapImplTest, Assigner) {
   int32_t value1 = 100;
   int32_t value2 = 101;
 
-  std::map<int32_t, int32_t> map;
+  absl::flat_hash_map<int32_t, int32_t> map;
   map[key1] = value1;
   map[key2] = value2;
 
@@ -1212,7 +1211,7 @@ TEST_F(MapImplTest, Assigner) {
 
 TEST_F(MapImplTest, Rehash) {
   const int test_size = 50;
-  std::map<int32_t, int32_t> reference_map;
+  absl::flat_hash_map<int32_t, int32_t> reference_map;
   for (int i = 0; i < test_size; i++) {
     reference_map[i] = i;
   }
@@ -1253,7 +1252,7 @@ TEST_F(MapImplTest, EqualRange) {
 
 TEST_F(MapImplTest, ConvertToStdMap) {
   map_[100] = 101;
-  std::map<int32_t, int32_t> std_map(map_.begin(), map_.end());
+  absl::flat_hash_map<int32_t, int32_t> std_map(map_.begin(), map_.end());
   EXPECT_EQ(1, std_map.size());
   EXPECT_EQ(101, std_map[100]);
 }
@@ -1994,7 +1993,7 @@ TEST_F(MapFieldReflectionTest, RepeatedFieldRefForRegularFields) {
 
   {
     int index = 0;
-    std::map<int32_t, ForeignMessage> result;
+    absl::flat_hash_map<int32_t, ForeignMessage> result;
     for (RepeatedFieldRef<Message>::iterator it =
              mf_int32_foreign_message.begin();
          it != mf_int32_foreign_message.end(); ++it) {
@@ -2008,8 +2007,7 @@ TEST_F(MapFieldReflectionTest, RepeatedFieldRefForRegularFields) {
       ++index;
     }
     EXPECT_EQ(10, index);
-    for (std::map<int32_t, ForeignMessage>::const_iterator it = result.begin();
-         it != result.end(); ++it) {
+    for (auto it = result.begin(); it != result.end(); ++it) {
       EXPECT_EQ(message.map_int32_foreign_message().at(it->first).c(),
                 it->second.c());
     }
