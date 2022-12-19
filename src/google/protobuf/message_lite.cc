@@ -364,6 +364,7 @@ bool MessageLite::ParsePartialFromCord(const absl::Cord& cord) {
 
 inline uint8_t* SerializeToArrayImpl(const MessageLite& msg, uint8_t* target,
                                      int size) {
+  LOGGING2;
   constexpr bool debug = false;
   if (debug) {
     // Force serialization to a stream with a block size of 1, which forces
@@ -382,7 +383,7 @@ inline uint8_t* SerializeToArrayImpl(const MessageLite& msg, uint8_t* target,
     io::EpsCopyOutputStream out(
         target, size,
         io::CodedOutputStream::IsDefaultSerializationDeterministic());
-    uint8_t* res = msg._InternalSerialize(target, &out);
+    uint8_t* res = out.Finalize(msg._InternalSerialize(target, &out));
     GOOGLE_ABSL_DCHECK(target + size == res);
     return res;
   }
@@ -480,6 +481,7 @@ bool MessageLite::AppendToString(std::string* output) const {
 }
 
 bool MessageLite::AppendPartialToString(std::string* output) const {
+  LOGGING2;
   size_t old_size = output->size();
   size_t byte_size = ByteSizeLong();
   if (byte_size > INT_MAX) {
@@ -489,10 +491,11 @@ bool MessageLite::AppendPartialToString(std::string* output) const {
   }
 
   absl::strings_internal::STLStringResizeUninitializedAmortized(
-      output, old_size + byte_size);
+      output, old_size + byte_size + 16);
   uint8_t* start =
       reinterpret_cast<uint8_t*>(io::mutable_string_data(output) + old_size);
   SerializeToArrayImpl(*this, start, byte_size);
+  output->resize(old_size + byte_size);
   return true;
 }
 
@@ -548,6 +551,7 @@ bool MessageLite::AppendToCord(absl::Cord* output) const {
 }
 
 bool MessageLite::AppendPartialToCord(absl::Cord* output) const {
+  LOGGING2;
   // For efficiency, we'd like to pass a size hint to CordOutputStream with
   // the exact total size expected.
   const size_t size = ByteSizeLong();
@@ -559,7 +563,7 @@ bool MessageLite::AppendPartialToCord(absl::Cord* output) const {
 
 
   // Allocate a CordBuffer (which may utilize private capacity in 'output').
-  absl::CordBuffer buffer = output->GetAppendBuffer(size);
+  absl::CordBuffer buffer = output->GetAppendBuffer(size + 16);
   absl::Span<char> available = buffer.available();
   auto target = reinterpret_cast<uint8_t*>(available.data());
   if (available.size() >= size) {
@@ -568,7 +572,7 @@ bool MessageLite::AppendPartialToCord(absl::Cord* output) const {
     io::EpsCopyOutputStream out(
         target, static_cast<int>(available.size()),
         io::CodedOutputStream::IsDefaultSerializationDeterministic());
-    auto res = _InternalSerialize(target, &out);
+    uint8_t* res = out.Finalize(_InternalSerialize(target, &out));
     GOOGLE_ABSL_DCHECK_EQ(res, target + size);
     buffer.IncreaseLengthBy(size);
     output->Append(std::move(buffer));
