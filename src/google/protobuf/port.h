@@ -39,6 +39,7 @@
 #include <cassert>
 #include <cstddef>
 #include <new>
+#include <string>
 #include <type_traits>
 
 
@@ -109,6 +110,27 @@ inline ToRef DownCast(From& f) {
 #endif
   return *static_cast<To*>(&f);
 }
+
+template <typename T>
+struct is_integral_type
+    : std::bool_constant<
+          std::is_same<T, int32>::value || std::is_same<T, uint32>::value ||
+          std::is_same<T, int64>::value || std::is_same<T, uint64>::value ||
+          std::is_same<T, bool>::value> {};
+
+template <typename T>
+struct is_floating_point_type
+    : std::bool_constant<std::is_same<T, float>::value ||
+                         std::is_same<T, double>::value> {};
+
+template <typename T>
+struct is_string_type
+    : std::bool_constant<std::is_same<T, std::string>::value> {};
+
+template <typename T>
+struct is_scalar_type : std::bool_constant<is_integral_type<T>::value ||
+                                           is_floating_point_type<T>::value ||
+                                           is_string_type<T>::value> {};
 
 // To prevent sharing cache lines between threads
 #ifdef __cpp_aligned_new
