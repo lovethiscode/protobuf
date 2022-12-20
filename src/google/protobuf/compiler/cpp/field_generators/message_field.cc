@@ -94,7 +94,7 @@ void SetMessageVariables(
   (*variables)["full_name"] = descriptor->full_name();
 }
 
-class MessageFieldGenerator : public FieldGenerator {
+class MessageFieldGenerator : public FieldBase {
  public:
   MessageFieldGenerator(const FieldDescriptor* descriptor,
                         const Options& options,
@@ -148,7 +148,7 @@ class MessageOneofFieldGenerator : public MessageFieldGenerator {
   void GenerateIsInitialized(io::Printer* printer) const override;
 };
 
-class RepeatedMessageFieldGenerator : public FieldGenerator {
+class RepeatedMessageFieldGenerator : public FieldBase {
  public:
   RepeatedMessageFieldGenerator(const FieldDescriptor* descriptor,
                                 const Options& options,
@@ -179,7 +179,7 @@ class RepeatedMessageFieldGenerator : public FieldGenerator {
 MessageFieldGenerator::MessageFieldGenerator(const FieldDescriptor* descriptor,
                                              const Options& options,
                                              MessageSCCAnalyzer* scc_analyzer)
-    : FieldGenerator(descriptor, options),
+    : FieldBase(descriptor, options),
       implicit_weak_field_(
           IsImplicitWeakField(descriptor, options, scc_analyzer)),
       has_required_fields_(
@@ -276,11 +276,7 @@ void MessageFieldGenerator::GenerateInlineAccessorDefinitions(
   } else {
     format("  $field$ = $name$;\n");
   }
-  auto nonempty = [this](const char* fn) {
-    auto var_it = variables_.find(fn);
-    return var_it != variables_.end() && !var_it->second.empty();
-  };
-  if (nonempty("set_hasbit") || nonempty("clear_hasbit")) {
+  if (internal::cpp::HasHasbit(descriptor_)) {
     format(
         "  if ($name$) {\n"
         "    $set_hasbit$\n"
@@ -819,7 +815,7 @@ void MessageOneofFieldGenerator::GenerateIsInitialized(
 RepeatedMessageFieldGenerator::RepeatedMessageFieldGenerator(
     const FieldDescriptor* descriptor, const Options& options,
     MessageSCCAnalyzer* scc_analyzer)
-    : FieldGenerator(descriptor, options),
+    : FieldBase(descriptor, options),
       implicit_weak_field_(
           IsImplicitWeakField(descriptor, options, scc_analyzer)),
       has_required_fields_(
@@ -1057,19 +1053,19 @@ void RepeatedMessageFieldGenerator::GenerateIsInitialized(
 }
 }  // namespace
 
-std::unique_ptr<FieldGenerator> MakeSinguarMessageGenerator(
+std::unique_ptr<FieldBase> MakeSinguarMessageGenerator(
     const FieldDescriptor* desc, const Options& options,
     MessageSCCAnalyzer* scc) {
   return absl::make_unique<MessageFieldGenerator>(desc, options, scc);
 }
 
-std::unique_ptr<FieldGenerator> MakeRepeatedMessageGenerator(
+std::unique_ptr<FieldBase> MakeRepeatedMessageGenerator(
     const FieldDescriptor* desc, const Options& options,
     MessageSCCAnalyzer* scc) {
   return absl::make_unique<RepeatedMessageFieldGenerator>(desc, options, scc);
 }
 
-std::unique_ptr<FieldGenerator> MakeOneofMessageGenerator(
+std::unique_ptr<FieldBase> MakeOneofMessageGenerator(
     const FieldDescriptor* desc, const Options& options,
     MessageSCCAnalyzer* scc) {
   return absl::make_unique<MessageOneofFieldGenerator>(desc, options, scc);

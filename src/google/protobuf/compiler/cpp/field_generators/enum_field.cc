@@ -64,7 +64,7 @@ void SetEnumVariables(
       MakeVarintCachedSizeFieldName(descriptor, cold);
 }
 
-class EnumFieldGenerator : public FieldGenerator {
+class EnumFieldGenerator : public FieldBase {
  public:
   EnumFieldGenerator(const FieldDescriptor* descriptor, const Options& options);
   ~EnumFieldGenerator() override = default;
@@ -98,13 +98,13 @@ class EnumOneofFieldGenerator : public EnumFieldGenerator {
   void GenerateConstructorCode(io::Printer* printer) const override;
 };
 
-class RepeatedEnumFieldGenerator : public FieldGenerator {
+class RepeatedEnumFieldGenerator : public FieldBase {
  public:
   RepeatedEnumFieldGenerator(const FieldDescriptor* descriptor,
                              const Options& options);
   ~RepeatedEnumFieldGenerator() override = default;
 
-  // implements FieldGenerator ---------------------------------------
+  // implements FieldBase ---------------------------------------
   void GeneratePrivateMembers(io::Printer* printer) const override;
   void GenerateAccessorDeclarations(io::Printer* printer) const override;
   void GenerateInlineAccessorDefinitions(io::Printer* printer) const override;
@@ -129,7 +129,7 @@ class RepeatedEnumFieldGenerator : public FieldGenerator {
 
 EnumFieldGenerator::EnumFieldGenerator(const FieldDescriptor* descriptor,
                                        const Options& options)
-    : FieldGenerator(descriptor, options) {
+    : FieldBase(descriptor, options) {
   SetEnumVariables(descriptor, &variables_, options);
 }
 
@@ -299,7 +299,7 @@ void EnumOneofFieldGenerator::GenerateConstructorCode(
 
 RepeatedEnumFieldGenerator::RepeatedEnumFieldGenerator(
     const FieldDescriptor* descriptor, const Options& options)
-    : FieldGenerator(descriptor, options) {
+    : FieldBase(descriptor, options) {
   SetEnumVariables(descriptor, &variables_, options);
 }
 
@@ -504,21 +504,21 @@ void RepeatedEnumFieldGenerator::GenerateCopyAggregateInitializer(
 }
 }  // namespace
 
-std::unique_ptr<FieldGenerator> MakeSinguarEnumGenerator(
-    const FieldDescriptor* desc, const Options& options,
-    MessageSCCAnalyzer* scc) {
+std::unique_ptr<FieldBase> MakeSinguarEnumGenerator(const FieldDescriptor* desc,
+                                                    const Options& options,
+                                                    MessageSCCAnalyzer* scc) {
   return absl::make_unique<EnumFieldGenerator>(desc, options);
 }
 
-std::unique_ptr<FieldGenerator> MakeRepeatedEnumGenerator(
+std::unique_ptr<FieldBase> MakeRepeatedEnumGenerator(
     const FieldDescriptor* desc, const Options& options,
     MessageSCCAnalyzer* scc) {
   return absl::make_unique<RepeatedEnumFieldGenerator>(desc, options);
 }
 
-std::unique_ptr<FieldGenerator> MakeOneofEnumGenerator(
-    const FieldDescriptor* desc, const Options& options,
-    MessageSCCAnalyzer* scc) {
+std::unique_ptr<FieldBase> MakeOneofEnumGenerator(const FieldDescriptor* desc,
+                                                  const Options& options,
+                                                  MessageSCCAnalyzer* scc) {
   return absl::make_unique<EnumOneofFieldGenerator>(desc, options);
 }
 

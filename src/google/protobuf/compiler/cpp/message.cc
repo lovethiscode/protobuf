@@ -498,6 +498,7 @@ absl::flat_hash_map<absl::string_view, std::string> ClassVars(
     const Descriptor* desc, Options opts) {
   absl::flat_hash_map<absl::string_view, std::string> vars = MessageVars(desc);
 
+  vars.emplace("pkg", Namespace(desc, opts));
   vars.emplace("Msg", ClassName(desc, false));
   vars.emplace("pkg::Msg", QualifiedClassName(desc, opts));
   vars.emplace("pkg.Msg", desc->full_name());
@@ -538,7 +539,7 @@ MessageGenerator::MessageGenerator(
     : descriptor_(descriptor),
       index_in_file_messages_(index_in_file_messages),
       options_(options),
-      field_generators_(descriptor, options, scc_analyzer),
+      field_generators_(descriptor),
       scc_analyzer_(scc_analyzer) {
 
   if (!message_layout_helper_) {
@@ -584,14 +585,8 @@ MessageGenerator::MessageGenerator(
       inlined_string_indices_[field->index()] = max_inlined_string_index_++;
     }
   }
-
-  if (!has_bit_indices_.empty()) {
-    field_generators_.SetHasBitIndices(has_bit_indices_);
-  }
-
-  if (!inlined_string_indices_.empty()) {
-    field_generators_.SetInlinedStringIndices(inlined_string_indices_);
-  }
+  field_generators_.Build(options_, scc_analyzer_, has_bit_indices_,
+                          inlined_string_indices_);
 
   for (int i = 0; i < descriptor->field_count(); i++) {
     if (descriptor->field(i)->is_required()) {
@@ -3607,6 +3602,7 @@ void MessageGenerator::GenerateSerializeOneofFields(
 void MessageGenerator::GenerateSerializeOneField(io::Printer* p,
                                                  const FieldDescriptor* field,
                                                  int cached_has_bits_index) {
+  auto v = p->WithVars(FieldVars(field, options_));
   Formatter format(p);
   if (!field->options().weak()) {
     // For weakfields, PrintFieldComment is called during iteration.

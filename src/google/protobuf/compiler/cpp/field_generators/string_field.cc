@@ -96,7 +96,7 @@ void SetStringVariables(
   }
 }
 
-class StringFieldGenerator : public FieldGenerator {
+class StringFieldGenerator : public FieldBase {
  public:
   StringFieldGenerator(const FieldDescriptor* descriptor,
                        const Options& options);
@@ -146,7 +146,7 @@ class StringOneofFieldGenerator : public StringFieldGenerator {
   void GenerateConstructorCode(io::Printer* printer) const override;
 };
 
-class RepeatedStringFieldGenerator : public FieldGenerator {
+class RepeatedStringFieldGenerator : public FieldBase {
  public:
   RepeatedStringFieldGenerator(const FieldDescriptor* descriptor,
                                const Options& options);
@@ -170,7 +170,7 @@ class RepeatedStringFieldGenerator : public FieldGenerator {
 
 StringFieldGenerator::StringFieldGenerator(const FieldDescriptor* descriptor,
                                            const Options& options)
-    : FieldGenerator(descriptor, options),
+    : FieldBase(descriptor, options),
       inlined_(IsStringInlined(descriptor, options)) {
   SetStringVariables(descriptor, &variables_, options);
 }
@@ -382,11 +382,7 @@ void StringFieldGenerator::GenerateInlineAccessorDefinitions(
       "inline void $classname$::set_allocated_$name$(std::string* $name$) {\n"
       "$maybe_prepare_split_message$");
 
-  auto nonempty = [this](const char* fn) {
-    auto var_it = variables_.find(fn);
-    return var_it != variables_.end() && !var_it->second.empty();
-  };
-  if (nonempty("set_hasbit") || nonempty("clear_hasbit")) {
+  if (internal::cpp::HasHasbit(descriptor_)) {
     format(
         "  if ($name$ != nullptr) {\n"
         "    $set_hasbit$\n"
@@ -394,6 +390,7 @@ void StringFieldGenerator::GenerateInlineAccessorDefinitions(
         "    $clear_hasbit$\n"
         "  }\n");
   }
+
   if (!inlined_) {
     format("  $field$.SetAllocated($name$, GetArenaForAllocation());\n");
     if (descriptor_->default_value_string().empty()) {
@@ -744,7 +741,7 @@ void StringOneofFieldGenerator::GenerateConstructorCode(
 
 RepeatedStringFieldGenerator::RepeatedStringFieldGenerator(
     const FieldDescriptor* descriptor, const Options& options)
-    : FieldGenerator(descriptor, options) {
+    : FieldBase(descriptor, options) {
   SetStringVariables(descriptor, &variables_, options);
 }
 
@@ -997,21 +994,21 @@ void RepeatedStringFieldGenerator::GenerateByteSize(
 }
 }  // namespace
 
-std::unique_ptr<FieldGenerator> MakeSinguarStringGenerator(
+std::unique_ptr<FieldBase> MakeSinguarStringGenerator(
     const FieldDescriptor* desc, const Options& options,
     MessageSCCAnalyzer* scc) {
   return absl::make_unique<StringFieldGenerator>(desc, options);
 }
 
-std::unique_ptr<FieldGenerator> MakeRepeatedStringGenerator(
+std::unique_ptr<FieldBase> MakeRepeatedStringGenerator(
     const FieldDescriptor* desc, const Options& options,
     MessageSCCAnalyzer* scc) {
   return absl::make_unique<RepeatedStringFieldGenerator>(desc, options);
 }
 
-std::unique_ptr<FieldGenerator> MakeOneofStringGenerator(
-    const FieldDescriptor* desc, const Options& options,
-    MessageSCCAnalyzer* scc) {
+std::unique_ptr<FieldBase> MakeOneofStringGenerator(const FieldDescriptor* desc,
+                                                    const Options& options,
+                                                    MessageSCCAnalyzer* scc) {
   return absl::make_unique<StringOneofFieldGenerator>(desc, options);
 }
 

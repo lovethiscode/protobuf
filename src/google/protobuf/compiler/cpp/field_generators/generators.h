@@ -36,7 +36,7 @@
 #include "google/protobuf/compiler/cpp/field.h"
 #include "google/protobuf/compiler/cpp/helpers.h"
 
-// The functions in this file construct FieldGenerator objects for generating
+// The functions in this file construct FieldBase objects for generating
 // different "codegen types" of fields. The logic for selecting the correct
 // choice of generator lives in compiler/cpp/field.cc; this is merely the
 // API that file uses for constructing generators.
@@ -51,57 +51,53 @@ namespace google {
 namespace protobuf {
 namespace compiler {
 namespace cpp {
-std::unique_ptr<FieldGenerator> MakeSinguarPrimitiveGenerator(
+std::unique_ptr<FieldBase> MakeSinguarPrimitiveGenerator(
     const FieldDescriptor* desc, const Options& options,
     MessageSCCAnalyzer* scc);
 
-std::unique_ptr<FieldGenerator> MakeRepeatedPrimitiveGenerator(
+std::unique_ptr<FieldBase> MakeRepeatedPrimitiveGenerator(
     const FieldDescriptor* desc, const Options& options,
     MessageSCCAnalyzer* scc);
 
-std::unique_ptr<FieldGenerator> MakeOneofPrimitiveGenerator(
+std::unique_ptr<FieldBase> MakeSinguarEnumGenerator(const FieldDescriptor* desc,
+                                                    const Options& options,
+                                                    MessageSCCAnalyzer* scc);
+
+std::unique_ptr<FieldBase> MakeRepeatedEnumGenerator(
     const FieldDescriptor* desc, const Options& options,
     MessageSCCAnalyzer* scc);
 
-std::unique_ptr<FieldGenerator> MakeSinguarEnumGenerator(
+std::unique_ptr<FieldBase> MakeOneofEnumGenerator(const FieldDescriptor* desc,
+                                                  const Options& options,
+                                                  MessageSCCAnalyzer* scc);
+
+std::unique_ptr<FieldBase> MakeSinguarStringGenerator(
     const FieldDescriptor* desc, const Options& options,
     MessageSCCAnalyzer* scc);
 
-std::unique_ptr<FieldGenerator> MakeRepeatedEnumGenerator(
+std::unique_ptr<FieldBase> MakeRepeatedStringGenerator(
     const FieldDescriptor* desc, const Options& options,
     MessageSCCAnalyzer* scc);
 
-std::unique_ptr<FieldGenerator> MakeOneofEnumGenerator(
+std::unique_ptr<FieldBase> MakeOneofStringGenerator(const FieldDescriptor* desc,
+                                                    const Options& options,
+                                                    MessageSCCAnalyzer* scc);
+
+std::unique_ptr<FieldBase> MakeSinguarMessageGenerator(
     const FieldDescriptor* desc, const Options& options,
     MessageSCCAnalyzer* scc);
 
-std::unique_ptr<FieldGenerator> MakeSinguarStringGenerator(
+std::unique_ptr<FieldBase> MakeRepeatedMessageGenerator(
     const FieldDescriptor* desc, const Options& options,
     MessageSCCAnalyzer* scc);
 
-std::unique_ptr<FieldGenerator> MakeRepeatedStringGenerator(
+std::unique_ptr<FieldBase> MakeOneofMessageGenerator(
     const FieldDescriptor* desc, const Options& options,
     MessageSCCAnalyzer* scc);
 
-std::unique_ptr<FieldGenerator> MakeOneofStringGenerator(
-    const FieldDescriptor* desc, const Options& options,
-    MessageSCCAnalyzer* scc);
-
-std::unique_ptr<FieldGenerator> MakeSinguarMessageGenerator(
-    const FieldDescriptor* desc, const Options& options,
-    MessageSCCAnalyzer* scc);
-
-std::unique_ptr<FieldGenerator> MakeRepeatedMessageGenerator(
-    const FieldDescriptor* desc, const Options& options,
-    MessageSCCAnalyzer* scc);
-
-std::unique_ptr<FieldGenerator> MakeOneofMessageGenerator(
-    const FieldDescriptor* desc, const Options& options,
-    MessageSCCAnalyzer* scc);
-
-std::unique_ptr<FieldGenerator> MakeMapGenerator(const FieldDescriptor* desc,
-                                                 const Options& options,
-                                                 MessageSCCAnalyzer* scc);
+std::unique_ptr<FieldBase> MakeMapGenerator(const FieldDescriptor* desc,
+                                            const Options& options,
+                                            MessageSCCAnalyzer* scc);
 }  // namespace cpp
 }  // namespace compiler
 }  // namespace protobuf
