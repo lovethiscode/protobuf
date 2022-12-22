@@ -98,7 +98,7 @@ set(libprotobuf_includes
   ${protobuf_SOURCE_DIR}/src/google/protobuf/wire_format.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/wrappers.pb.h
 )
-
+add_definitions(-DPROTOBUF_USE_DLLS -DLIBPROTOBUF_EXPORTS)
 add_library(libprotobuf ${protobuf_SHARED_OR_STATIC}
   ${libprotobuf_lite_files} ${libprotobuf_files} ${libprotobuf_includes} ${protobuf_version_rc_file})
 if(protobuf_HAVE_LD_VERSION_SCRIPT)
@@ -129,6 +129,5 @@ endif()
 set_target_properties(libprotobuf PROPERTIES
     VERSION ${protobuf_VERSION}
     SOVERSION 32
-    OUTPUT_NAME ${LIB_PREFIX}protobuf
-    DEBUG_POSTFIX "${protobuf_DEBUG_POSTFIX}")
+    OUTPUT_NAME ${LIB_PREFIX}protobuf)
 add_library(protobuf::libprotobuf ALIAS libprotobuf)

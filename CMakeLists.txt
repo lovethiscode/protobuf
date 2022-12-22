@@ -273,17 +273,17 @@ if (MSVC)
 
   if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Configure Resource Compiler
-    enable_language(RC)
+    #enable_language(RC)
     # use English language (0x409) in resource compiler
-    set(rc_flags "/l0x409")
+    #set(rc_flags "/l0x409")
     # fix rc.exe invocations because of usage of add_definitions()
-    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_flags} <DEFINES> /fo<OBJECT> <SOURCE>")
+    #set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> ${rc_flags} <DEFINES> /fo<OBJECT> <SOURCE>")
   endif()
 
   # Generate the version.rc file used elsewhere.
-  configure_file(${protobuf_SOURCE_DIR}/cmake/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
-  set(protobuf_version_rc_file ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
-
+  #configure_file(${protobuf_SOURCE_DIR}/cmake/version.rc.in ${CMAKE_CURRENT_BINARY_DIR}/version.rc @ONLY)
+  #set(protobuf_version_rc_file ${CMAKE_CURRENT_BINARY_DIR}/version.rc)
+  set(protobuf_version_rc_file)
   # Add the "lib" prefix for generated .lib outputs.
   set(LIB_PREFIX lib)
 else (MSVC)
