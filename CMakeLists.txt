@@ -305,7 +305,7 @@ if (protobuf_UNICODE)
 endif (protobuf_UNICODE)
 
 include(${protobuf_SOURCE_DIR}/cmake/libprotobuf-lite.cmake)
-include(${protobuf_SOURCE_DIR}/cmake/libprotobuf.cmake)
+#include(${protobuf_SOURCE_DIR}/cmake/libprotobuf.cmake)
 if (protobuf_BUILD_LIBPROTOC)
   include(${protobuf_SOURCE_DIR}/cmake/libprotoc.cmake)
 endif (protobuf_BUILD_LIBPROTOC)

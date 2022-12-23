@@ -85,7 +85,7 @@ set(libprotobuf_lite_includes
   ${protobuf_SOURCE_DIR}/src/google/protobuf/stubs/template_util.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/wire_format_lite.h
 )
-
+add_definitions(-DPROTOBUF_USE_DLLS -DLIBPROTOBUF_EXPORTS)
 add_library(libprotobuf-lite ${protobuf_SHARED_OR_STATIC}
   ${libprotobuf_lite_files} ${libprotobuf_lite_includes} ${protobuf_version_rc_file})
 if(protobuf_HAVE_LD_VERSION_SCRIPT)
@@ -113,6 +113,5 @@ endif()
 set_target_properties(libprotobuf-lite PROPERTIES
     VERSION ${protobuf_VERSION}
     SOVERSION 32
-    OUTPUT_NAME ${LIB_PREFIX}protobuf-lite
-    DEBUG_POSTFIX "${protobuf_DEBUG_POSTFIX}")
+    OUTPUT_NAME ${LIB_PREFIX}protobuf-lite)
 add_library(protobuf::libprotobuf-lite ALIAS libprotobuf-lite)

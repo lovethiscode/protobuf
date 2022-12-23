@@ -98,7 +98,7 @@ set(libprotobuf_includes
   ${protobuf_SOURCE_DIR}/src/google/protobuf/wire_format.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/wrappers.pb.h
 )
-add_definitions(-DPROTOBUF_USE_DLLS -DLIBPROTOBUF_EXPORTS)
+
 add_library(libprotobuf ${protobuf_SHARED_OR_STATIC}
   ${libprotobuf_lite_files} ${libprotobuf_files} ${libprotobuf_includes} ${protobuf_version_rc_file})
 if(protobuf_HAVE_LD_VERSION_SCRIPT)
