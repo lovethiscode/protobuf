@@ -62,6 +62,7 @@ struct Options {
   std::string runtime_include_base;
   std::string annotation_pragma_name;
   std::string annotation_guard_name;
+  std::string include_path;
   FieldListenerOptions field_listener_options;
   EnforceOptimizeMode enforce_mode = EnforceOptimizeMode::kNoEnforcement;
   enum {

@@ -111,6 +111,7 @@ FileGenerator::FileGenerator(const FileDescriptor* file, const Options& options)
   // These variables are the same on a file level
   SetCommonVars(options, &variables_);
   variables_["dllexport_decl"] = options.dllexport_decl;
+  variables_["include_path"] = options.include_path;
   variables_["tablename"] = UniqueName("TableStruct", file_, options_);
   variables_["file_level_metadata"] =
       UniqueName("file_level_metadata", file_, options_);
@@ -189,7 +190,7 @@ void FileGenerator::GenerateMacroUndefs(io::Printer* printer) {
 
 void FileGenerator::GenerateHeader(io::Printer* printer) {
   Formatter format(printer, variables_);
-
+  format("$1$\n", variables_["include_path"].c_str());
   // port_def.inc must be included after all other includes.
   IncludeFile("net/proto2/public/port_def.inc", printer);
   format("#define $1$$ dllexport_decl$\n", FileDllExport(file_, options_));
