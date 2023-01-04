@@ -85,9 +85,12 @@ set(libprotobuf_lite_includes
   ${protobuf_SOURCE_DIR}/src/google/protobuf/stubs/template_util.h
   ${protobuf_SOURCE_DIR}/src/google/protobuf/wire_format_lite.h
 )
-add_definitions(-DPROTOBUF_USE_DLLS -DLIBPROTOBUF_EXPORTS)
+
 add_library(libprotobuf-lite ${protobuf_SHARED_OR_STATIC}
-  ${libprotobuf_lite_files} ${libprotobuf_lite_includes} ${protobuf_version_rc_file})
+${libprotobuf_lite_files} ${libprotobuf_lite_includes} ${protobuf_version_rc_file})
+target_compile_definitions(libprotobuf-lite
+    PRIVATE  PROTOBUF_USE_DLLS
+    PRIVATE LIBPROTOBUF_EXPORTS)
 if(protobuf_HAVE_LD_VERSION_SCRIPT)
   if(${CMAKE_VERSION} VERSION_GREATER 3.13 OR ${CMAKE_VERSION} VERSION_EQUAL 3.13)
     target_link_options(libprotobuf-lite PRIVATE -Wl,--version-script=${protobuf_SOURCE_DIR}/src/libprotobuf-lite.map)

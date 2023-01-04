@@ -124,7 +124,6 @@ endif()
 target_link_libraries(libprotoc PRIVATE libprotobuf)
 if(protobuf_BUILD_SHARED_LIBS)
   target_compile_definitions(libprotoc
-    PUBLIC  PROTOBUF_USE_DLLS
     PRIVATE LIBPROTOC_EXPORTS)
 endif()
 set_target_properties(libprotoc PROPERTIES
